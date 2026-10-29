@@ -1,0 +1,39 @@
+#include <windows.h>
+
+/* The manifest is NOT compiled in here. MinGW's gcc spec always links its own
+ * default-manifest.o, and binutils refuses to merge two non-default manifests
+ * (it embeds both, leaving the execution level ambiguous - asInvoker can win,
+ * and the app then never elevates).
+ *
+ * Instead res/manifest.rc is compiled to an object literally named
+ * default-manifest.o and the build passes -B so it shadows the CRT's copy in
+ * the startfile search path. MSVC has no such problem and embeds the manifest
+ * through /MANIFESTINPUT. Either way exactly one manifest ends up in the exe.
+ */
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION    1,0,0,0
+PRODUCTVERSION 1,0,0,0
+FILEFLAGSMASK  VS_FFI_FILEFLAGSMASK
+FILEFLAGS      0
+FILEOS         VOS_NT_WINDOWS32
+FILETYPE       VFT_APP
+FILESUBTYPE    VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0"
+        BEGIN
+            VALUE "FileDescription", "NVIDIA clean-install driver kit"
+            VALUE "FileVersion",     "1.0.0.0"
+            VALUE "InternalName",    "NvDriverKit"
+            VALUE "OriginalFilename","NvDriverKit.exe"
+            VALUE "ProductName",     "NvDriverKit"
+            VALUE "ProductVersion",  "1.0.0.0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END

@@ -1,0 +1,5 @@
+#include <windows.h>
+
+/* Compiled to build\default-manifest.o so that -B makes it shadow the copy
+ * MinGW's gcc spec would otherwise link. See the note in app.rc. */
+1 RT_MANIFEST "app.manifest"
