@@ -1,0 +1,10 @@
+# Windows-only project: LF in the repository, CRLF in the working tree.
+# This is what core.autocrlf was already doing implicitly, made explicit so
+# the repo behaves the same on any clone.
+* text=auto eol=crlf
+
+# Leave these alone entirely - never diff, never convert line endings.
+*.ico binary
+*.res binary
+*.o   binary
+*.exe binary
