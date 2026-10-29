@@ -11,8 +11,13 @@ build/
 *.exp
 *.lib
 
-# Editor / OS noise
-.vscode/
+# Editor / OS noise. The two VS Code files below are shared on purpose: they
+# carry the compiler path and the build defines, without which IntelliSense
+# cannot find stdio.h. A trailing-slash ignore would stop git descending into
+# the directory at all, so the "!" exceptions would never be considered.
+.vscode/*
+!.vscode/c_cpp_properties.json
+!.vscode/tasks.json
 *.swp
 Thumbs.db
 desktop.ini

@@ -1,0 +1,46 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            // Ctrl+Shift+B. The absolute path matters: cmd will not resolve
+            // "build.bat" by name from every working directory.
+            "label": "build",
+            "detail": "Compile and link with MinGW-w64",
+            "type": "shell",
+            "command": "${workspaceFolder}\\build.bat",
+            "options": {
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "PATH": "C:\\winlibs-extract\\mingw64\\bin;${env:PATH}"
+                }
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            // Turns gcc's "file:line:col: error:" output into clickable
+            // entries in the Problems panel.
+            "problemMatcher": "$gcc",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "clear": true
+            }
+        },
+        {
+            "label": "regenerate icon",
+            "detail": "Redraw res/app.ico from res/make-icon.ps1",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-NoProfile",
+                "-ExecutionPolicy", "Bypass",
+                "-File", "${workspaceFolder}\\res\\make-icon.ps1"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        }
+    ]
+}

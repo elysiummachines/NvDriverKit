@@ -1,0 +1,40 @@
+{
+    "version": 4,
+    "configurations": [
+        {
+            "name": "MinGW-w64",
+
+            // Pointing the extension at the compiler is what actually fixes
+            // "cannot open source file stdio.h": it queries gcc for the real
+            // search path instead of guessing. The explicit includePath below
+            // is belt and braces, and makes Go to Definition work on the
+            // Windows SDK headers mingw-w64 ships.
+            "compilerPath": "C:/winlibs-extract/mingw64/bin/gcc.exe",
+            "compilerArgs": [
+                "-municode",
+                "-mwindows"
+            ],
+            "cStandard": "c11",
+            "intelliSenseMode": "windows-gcc-x64",
+
+            "includePath": [
+                "${workspaceFolder}/src",
+                "C:/winlibs-extract/mingw64/lib/gcc/x86_64-w64-mingw32/16.2.0/include",
+                "C:/winlibs-extract/mingw64/lib/gcc/x86_64-w64-mingw32/16.2.0/include-fixed",
+                "C:/winlibs-extract/mingw64/x86_64-w64-mingw32/include",
+                "C:/winlibs-extract/mingw64/include"
+            ],
+
+            // These come from build.bat. Without them the editor parses the
+            // ANSI branch of every Win32 macro and COBJMACROS is undefined,
+            // so every IUIAutomation_* call in uia.c looks undeclared.
+            "defines": [
+                "UNICODE",
+                "_UNICODE",
+                "WIN32_LEAN_AND_MEAN",
+                "_WIN32_WINNT=0x0A00",
+                "COBJMACROS"
+            ]
+        }
+    ]
+}
