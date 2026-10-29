@@ -955,6 +955,30 @@ RunResult wizard_run(const RunConfig *cfg, volatile LONG *cancel)
         wchar_t hash2[80];
         BOOL writable = TRUE;
 
+        /* Clear anything an earlier run left here. Each package is ~800 MB,
+         * so leftovers accumulate fast on the system drive. */
+        {
+            wchar_t glob[NVDK_MAX_PATH];
+            WIN32_FIND_DATAW fd;
+            HANDLE h;
+
+            _snwprintf(glob, NVDK_MAX_PATH, L"%s\\*.exe", cfg->exec_dir);
+            glob[NVDK_MAX_PATH - 1] = L'\0';
+
+            h = FindFirstFileW(glob, &fd);
+            if (h != INVALID_HANDLE_VALUE) {
+                do {
+                    wchar_t old[NVDK_MAX_PATH];
+                    if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) continue;
+                    _snwprintf(old, NVDK_MAX_PATH, L"%s\\%s", cfg->exec_dir, fd.cFileName);
+                    old[NVDK_MAX_PATH - 1] = L'\0';
+                    if (DeleteFileW(old))
+                        log_write(LG_INFO, L"Removed leftover staged package %s", fd.cFileName);
+                } while (FindNextFileW(h, &fd));
+                FindClose(h);
+            }
+        }
+
         _snwprintf(runpkg, NVDK_MAX_PATH, L"%s\\%s", cfg->exec_dir,
                    leaf ? leaf + 1 : L"package.exe");
         runpkg[NVDK_MAX_PATH - 1] = L'\0';
@@ -983,6 +1007,15 @@ RunResult wizard_run(const RunConfig *cfg, volatile LONG *cancel)
     if (!proc_run(runpkg, NULL, FALSE, T_INSTALL_MS, &exitcode, NULL))
         goto cleanup;
     log_write(LG_INFO, L"Installer exit code %lu", exitcode);
+
+    /* The staged copy has served its purpose and the Desktop package is the
+     * one that is kept, so drop it rather than leaving ~800 MB per run on
+     * the system drive. */
+    if (DeleteFileW(runpkg))
+        log_write(LG_OK, L"Removed the staged copy (%s)", cfg->exec_dir);
+    else
+        log_write(LG_WARN, L"Could not remove the staged copy from %s (%lu)",
+                  cfg->exec_dir, GetLastError());
 
     /* ---- verify the install actually landed ---- */
     log_write(LG_STEP, L"Verifying the installed driver");

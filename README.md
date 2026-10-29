@@ -36,6 +36,7 @@ Install
   package is saved to the Desktop, so it can be shared or kept
   hash it, copy to the admin-only run directory, confirm the hashes match
   run THAT copy (never the Desktop one - the Desktop is user-writable)
+  delete the staged copy once the installer exits, and sweep any leftovers
   re-read the driver version; it must match what we set out to install
 
 Post-install
