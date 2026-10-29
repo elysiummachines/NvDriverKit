@@ -11,6 +11,12 @@
  * through /MANIFESTINPUT. Either way exactly one manifest ends up in the exe.
  */
 
+/* Resource id 1, which main.c loads with LoadIconW(inst, MAKEINTRESOURCEW(1)).
+ * The lowest-numbered icon group is also what Explorer and the taskbar show
+ * for the .exe itself. Icon and manifest can share id 1: they are different
+ * resource types. */
+1 ICON "app.ico"
+
 VS_VERSION_INFO VERSIONINFO
 FILEVERSION    1,0,0,0
 PRODUCTVERSION 1,0,0,0

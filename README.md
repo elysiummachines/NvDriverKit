@@ -117,6 +117,13 @@ set PATH=C:\winlibs-extract\mingw64\bin;%PATH%
 No Windows SDK is required — mingw-w64 ships its own `uiautomation.h`,
 `wintrust.h` and `bcrypt.h`.
 
+The application icon is `res/app.ico`, nine sizes from 16 to 256 so the shell
+picks a drawn bitmap rather than resampling one. Regenerate it with:
+
+```bat
+powershell -ExecutionPolicy Bypass -File res\make-icon.ps1
+```
+
 ```bat
 build-msvc.bat
 ```
