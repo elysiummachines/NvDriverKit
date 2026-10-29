@@ -208,12 +208,6 @@ void     uia_release(UiaEl *el);
  * (0 = any). Returns NULL if absent. Caller releases. */
 UiaEl   *uia_find_by_name(UiaCtx *ctx, UiaEl *root, const wchar_t *name, int ctrl_type);
 
-/* Find a descendant whose name starts with prefix. */
-UiaEl   *uia_find_by_prefix(UiaCtx *ctx, UiaEl *root, const wchar_t *prefix, int ctrl_type);
-
-/* Find a descendant whose name contains needle. */
-UiaEl   *uia_find_by_substring(UiaCtx *ctx, UiaEl *root, const wchar_t *needle, int ctrl_type);
-
 /* Match on AutomationId - preferred over names wherever an id is known. */
 UiaEl   *uia_find_by_id(UiaCtx *ctx, UiaEl *root, const wchar_t *autoid);
 UiaEl   *uia_wait_for_id(UiaCtx *ctx, UiaEl *root, const wchar_t *autoid, DWORD timeout_ms);
@@ -221,18 +215,10 @@ UiaEl   *uia_wait_for_id(UiaCtx *ctx, UiaEl *root, const wchar_t *autoid, DWORD 
 /* Poll until the element's Name is non-empty (labels that fill in async). */
 BOOL     uia_wait_nonempty_name(UiaEl *el, wchar_t *out, size_t cch, DWORD timeout_ms);
 
-/* WPF combo boxes expose no ValuePattern: read the selection, set by picking
- * the matching ListItem. */
-BOOL     uia_get_combo_selection(UiaEl *el, wchar_t *out, size_t cch);
-BOOL     uia_select_combo_item(UiaCtx *ctx, UiaEl *combo, UiaEl *win_root,
-                               const wchar_t *text);
-
-/* Number of ticked checkboxes under root; names_out gets a comma list. */
-int      uia_count_checked(UiaCtx *ctx, UiaEl *root, wchar_t *names_out, size_t cch);
-
-/* Same, but for a list whose rows are ListItems holding an unnamed CheckBox:
- * the label is read from the ListItem, not the box. This is how the component
- * list is built, so uia_count_checked returns blank names for it. */
+/* Ticked rows of a list whose entries are ListItems holding an unnamed
+ * CheckBox: the label is read from the ListItem, not the box, because the box
+ * has no name. This is how the component list is built. names_out gets a
+ * comma-separated list of the ticked rows. */
 int      uia_list_checked_items(UiaCtx *ctx, UiaEl *root, wchar_t *names_out, size_t cch);
 
 /* Poll for an element by name until timeout_ms elapses. */
