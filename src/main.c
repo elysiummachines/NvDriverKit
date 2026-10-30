@@ -8,11 +8,17 @@
 #define IDC_LOG     1002
 #define IDC_STATUS  1003
 #define IDC_CANCEL  1004
+#define IDC_FETCH   1005
 
 #define WM_LOGLINE  (WM_APP + 1)
 #define WM_RUNDONE  (WM_APP + 2)
 
-static HWND  g_main, g_btn, g_cancel, g_log, g_status;
+/* Which job the one worker thread is running. Both end in a RunResult and a
+ * WM_RUNDONE, so only the dispatch differs. */
+typedef enum { WORK_RUN, WORK_CAPTURE } WorkKind;
+
+static HWND  g_main, g_btn, g_fetch, g_cancel, g_log, g_status;
+static WorkKind g_work = WORK_RUN;
 static HFONT g_ui_font, g_mono_font;
 static volatile LONG g_cancel_flag = 0;
 static volatile LONG g_running = 0;
@@ -95,6 +101,8 @@ static DWORD WINAPI worker(LPVOID param)
         r = wizard_probe_attach() ? RUN_ABORTED : RUN_ERROR;
     } else if (g_probe_mode) {
         r = wizard_probe(&g_cfg) ? RUN_ABORTED : RUN_ERROR;
+    } else if (g_work == WORK_CAPTURE) {
+        r = wizard_capture(&g_cfg, &g_cancel_flag);
     } else {
         r = wizard_run(&g_cfg, &g_cancel_flag);
     }
@@ -102,23 +110,26 @@ static DWORD WINAPI worker(LPVOID param)
     return 0;
 }
 
-static void start_run(void)
+static void start_work(WorkKind kind)
 {
     HANDLE th;
 
     if (InterlockedCompareExchange(&g_running, 1, 0) != 0)
         return;
 
+    g_work = kind;
     g_cancel_flag = 0;
     SetWindowTextW(g_log, L"");
     EnableWindow(g_btn, FALSE);
+    EnableWindow(g_fetch, FALSE);
     EnableWindow(g_cancel, TRUE);
-    set_status(L"Working...");
+    set_status(kind == WORK_CAPTURE ? L"Fetching settings..." : L"Working...");
 
     th = CreateThread(NULL, 0, worker, NULL, 0, NULL);
     if (!th) {
         InterlockedExchange(&g_running, 0);
         EnableWindow(g_btn, TRUE);
+        EnableWindow(g_fetch, TRUE);
         EnableWindow(g_cancel, FALSE);
         set_status(L"Could not start the worker thread.");
         return;
@@ -130,11 +141,16 @@ static void finish_run(RunResult r)
 {
     InterlockedExchange(&g_running, 0);
     EnableWindow(g_btn, TRUE);
+    EnableWindow(g_fetch, TRUE);
     EnableWindow(g_cancel, FALSE);
 
     switch (r) {
     case RUN_UP_TO_DATE:
         set_status(L"Up to date - nothing to do.");
+        break;
+
+    case RUN_CAPTURED:
+        set_status(L"Settings fetched and saved.");
         break;
 
     case RUN_INSTALLED:
@@ -177,16 +193,19 @@ static void finish_run(RunResult r)
 static void layout(HWND hwnd)
 {
     RECT rc;
-    int w, h, pad = 12, bh = 34, sh = 22;
+    int w, h, x, pad = 12, bh = 34, sh = 22;
 
     GetClientRect(hwnd, &rc);
     w = rc.right - rc.left;
     h = rc.bottom - rc.top;
 
-    MoveWindow(g_btn,    pad, pad, 190, bh, TRUE);
-    MoveWindow(g_cancel, pad + 190 + 8, pad, 100, bh, TRUE);
-    MoveWindow(g_status, pad + 190 + 8 + 100 + 12, pad + 7,
-               w - (pad * 2 + 190 + 8 + 100 + 12), sh, TRUE);
+    /* Walk the button row left to right so adding one does not mean redoing
+     * the arithmetic for everything after it. */
+    x = pad;
+    MoveWindow(g_btn,    x, pad, 190, bh, TRUE); x += 190 + 8;
+    MoveWindow(g_fetch,  x, pad, 150, bh, TRUE); x += 150 + 8;
+    MoveWindow(g_cancel, x, pad, 100, bh, TRUE); x += 100 + 12;
+    MoveWindow(g_status, x, pad + 7, w - x - pad, sh, TRUE);
     MoveWindow(g_log, pad, pad + bh + pad,
                w - pad * 2, h - (pad * 2 + bh + pad), TRUE);
 }
@@ -198,6 +217,9 @@ static LRESULT CALLBACK wndproc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         g_btn = CreateWindowExW(0, L"BUTTON", L"Check for Driver",
             WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_DEFPUSHBUTTON,
             0, 0, 0, 0, hwnd, (HMENU)IDC_CHECK, NULL, NULL);
+        g_fetch = CreateWindowExW(0, L"BUTTON", L"Fetch Settings",
+            WS_CHILD | WS_VISIBLE | WS_TABSTOP,
+            0, 0, 0, 0, hwnd, (HMENU)IDC_FETCH, NULL, NULL);
         g_cancel = CreateWindowExW(0, L"BUTTON", L"Cancel",
             WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_DISABLED,
             0, 0, 0, 0, hwnd, (HMENU)IDC_CANCEL, NULL, NULL);
@@ -210,6 +232,7 @@ static LRESULT CALLBACK wndproc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
             0, 0, 0, 0, hwnd, (HMENU)IDC_LOG, NULL, NULL);
 
         SendMessageW(g_btn,    WM_SETFONT, (WPARAM)g_ui_font, TRUE);
+        SendMessageW(g_fetch,  WM_SETFONT, (WPARAM)g_ui_font, TRUE);
         SendMessageW(g_cancel, WM_SETFONT, (WPARAM)g_ui_font, TRUE);
         SendMessageW(g_status, WM_SETFONT, (WPARAM)g_ui_font, TRUE);
         SendMessageW(g_log,    WM_SETFONT, (WPARAM)g_mono_font, TRUE);
@@ -225,7 +248,8 @@ static LRESULT CALLBACK wndproc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         return 0;
 
     case WM_COMMAND:
-        if (LOWORD(wp) == IDC_CHECK)  start_run();
+        if (LOWORD(wp) == IDC_CHECK)  start_work(WORK_RUN);
+        if (LOWORD(wp) == IDC_FETCH)  start_work(WORK_CAPTURE);
         if (LOWORD(wp) == IDC_CANCEL) {
             InterlockedExchange(&g_cancel_flag, 1);
             set_status(L"Cancelling after the current step...");
@@ -284,7 +308,7 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE prev, LPWSTR cmdline, int show)
     INITCOMMONCONTROLSEX icc;
     int argc = 0, i;
     wchar_t **argv;
-    BOOL dry = FALSE, force = FALSE;
+    BOOL dry = FALSE, force = FALSE, capture = FALSE;
 
     (void)prev; (void)cmdline;
 
@@ -296,6 +320,7 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE prev, LPWSTR cmdline, int show)
             g_probe_back = _wtoi(argv[++i]);
         if (_wcsicmp(argv[i], L"--dry-run") == 0)      dry = TRUE;
         if (_wcsicmp(argv[i], L"--force") == 0)        force = TRUE;
+        if (_wcsicmp(argv[i], L"--capture") == 0)      capture = TRUE;
     }
     if (argv) LocalFree(argv);
 
@@ -346,6 +371,7 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE prev, LPWSTR cmdline, int show)
             L"writing to %ProgramData% both require it.",
             L"NvDriverKit", MB_OK | MB_ICONERROR);
         EnableWindow(g_btn, FALSE);
+        EnableWindow(g_fetch, FALSE);
     } else {
         NvDriverInfo info;
         if (nv_get_installed(&info)) {
@@ -360,6 +386,11 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE prev, LPWSTR cmdline, int show)
              * click so it can be run unattended. */
             set_status(L"Probe mode: dumping the control tree...");
             PostMessageW(g_main, WM_COMMAND, MAKEWPARAM(IDC_CHECK, 0), 0);
+        } else if (capture) {
+            /* --capture drives the Fetch Settings button rather than calling
+             * the worker directly, so an unattended run exercises exactly the
+             * path a click takes. */
+            PostMessageW(g_main, WM_COMMAND, MAKEWPARAM(IDC_FETCH, 0), 0);
         }
     }
 
