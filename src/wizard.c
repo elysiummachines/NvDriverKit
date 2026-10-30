@@ -421,8 +421,8 @@ static void clear_stale_workspace(void)
 }
 
 /* A clean install wipes driver settings. NvPostInstall.ps1 restores them from
- * MySettings.nip - which only exists if -Capture was run beforehand. Finding
- * that out after the wipe is too late, so check now. */
+ * MySettings.nip - which only exists if Fetch Settings has been run first.
+ * Finding that out after the wipe is too late, so check now. */
 static BOOL check_settings_capture(void)
 {
     wchar_t *docs = NULL;
@@ -438,12 +438,13 @@ static BOOL check_settings_capture(void)
 
     if (!GetFileAttributesExW(nip, GetFileExInfoStandard, &fad)) {
         log_write(LG_FAIL, L"No saved driver settings at %s", nip);
-        log_write(LG_INFO, L"A clean install erases your settings. Capture them first:");
-        log_write(LG_INFO, L"  powershell -ExecutionPolicy Bypass -File NvPostInstall.ps1 -Capture");
+        log_write(LG_INFO, L"A clean install erases your settings.");
+        log_write(LG_INFO, L"Click Fetch Settings to save them, then run again.");
         return FALSE;
     }
     if (fad.nFileSizeLow < 64 && fad.nFileSizeHigh == 0) {
-        log_write(LG_FAIL, L"MySettings.nip is empty (%lu bytes) - re-run -Capture", fad.nFileSizeLow);
+        log_write(LG_FAIL, L"MySettings.nip is empty (%lu bytes) - click Fetch Settings again",
+                  fad.nFileSizeLow);
         return FALSE;
     }
     FileTimeToSystemTime(&fad.ftLastWriteTime, &st);

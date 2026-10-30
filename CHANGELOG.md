@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 - Fetch Settings button saves your current driver settings without opening a PowerShell prompt
 - The app reports how many settings were captured, read back from the saved file rather than from the script output
 - `--capture` runs the same path unattended
+- The preflight message for missing settings points at the button instead of a PowerShell command
 - Release builds stamp the window title and the manifest identity as well as the file properties
 - The repository carries the version being prepared, so a plain local build shows the right number
 
