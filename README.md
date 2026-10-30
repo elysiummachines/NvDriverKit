@@ -1,6 +1,8 @@
 <div align="center">
 
-# ⚡ NvDriverKit
+<img src="res/icon.png" alt="NvDriverKit icon" width="96">
+
+# NvDriverKit
 **One-click verified NVIDIA clean installs. Reinstalls the old-school Control Panel and restores all your settings.**
 
 [![CI](https://github.com/elysiummachines/NvDriverKit/actions/workflows/ci.yml/badge.svg)](https://github.com/elysiummachines/NvDriverKit/actions/workflows/ci.yml)
@@ -8,7 +10,7 @@
 [![Downloads](https://img.shields.io/github/downloads/elysiummachines/NvDriverKit/total?style=flat-square&color=ff0000)](https://github.com/elysiummachines/NvDriverKit/releases)
 [![C](https://img.shields.io/badge/C-C11-blue?style=flat-square)](https://en.cppreference.com/w/c/11)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?style=flat-square)](https://www.microsoft.com/windows)
-[![Size](https://img.shields.io/badge/Binary-132%20KB-brightgreen?style=flat-square)](#verification)
+[![Size](https://img.shields.io/badge/Binary-~133%20KB-brightgreen?style=flat-square)](#verification)
 [![License](https://img.shields.io/badge/License-MIT-grey.svg?style=flat-square)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/elysiummachines/NvDriverKit?style=social)](https://github.com/elysiummachines/NvDriverKit/stargazers)
 
@@ -30,7 +32,7 @@ Modern DCH driver packages no longer ship the Control Panel applet, and a clean
 install erases your profiles and DSR factors. NvDriverKit handles both, so a
 clean install costs you nothing.
 
-No frameworks, no runtime dependencies, ~132 KB.
+No frameworks, no runtime dependencies, ~133 KB.
 
 ## Features
 
@@ -271,7 +273,7 @@ silent bump breaks every automation path. The exe is pinned by signer thumbprint
 | Checked | Result |
 |---|---|
 | Compiles, zero warnings at `-Wall -Wextra -Wshadow` | yes |
-| Standalone binary | 135,680 bytes, 21 system DLLs, no others |
+| Standalone binary | about 133 KB, system DLLs only, no bundled runtime |
 | ASLR / high-entropy ASLR / DEP | on (`DllCharacteristics 0x0160`) |
 | Control Flow Guard | off (MinGW cannot emit it; use `build-msvc.bat`) |
 | Embedded manifest | exactly one, `requireAdministrator`, no `asInvoker` |
@@ -284,7 +286,7 @@ silent bump breaks every automation path. The exe is pinned by signer thumbprint
 | Silent script relay + stdin to `Read-Host` | verified against a stand-in script |
 | Full run with the silent relay and registry write | completed; no console window, script exit 0, `DevicePriority = 3` |
 
-Sizes are from the released build. A local build with a different GCC will differ by a
+The size is approximate because it depends on the toolchain. A local build with a different GCC will differ by a
 few KB and may pull one more UCRT API set, so `verify-binary.ps1` asserts the properties
 that matter rather than an exact byte count.
 

@@ -70,7 +70,7 @@ jobs:
         run: |
           $name = "NvDriverKit-${{ steps.ver.outputs.tag }}-x64"
           New-Item -ItemType Directory -Path pkg | Out-Null
-          Copy-Item build\NvDriverKit.exe, README.md, LICENSE pkg\
+          Copy-Item build\NvDriverKit.exe, README.md, LICENSE, NvPostInstall.ps1 pkg\
           Compress-Archive -Path pkg\* -DestinationPath "$name.zip"
 
           # Publish the hash alongside it: the exe is unsigned, so this is
@@ -79,10 +79,21 @@ jobs:
           "$hash  NvDriverKit.exe" | Out-File "$name.sha256" -Encoding ascii
           Write-Host "SHA-256: $hash"
 
+      - name: Build the release notes
+        shell: pwsh
+        run: |
+          # The body is this version's changelog section, so the release notes
+          # and CHANGELOG.md are the same text by construction. Fails the job
+          # when the tag has no section, rather than publishing empty notes.
+          .\.github\scripts\changelog-section.ps1 -Tag '${{ steps.ver.outputs.tag }}' |
+              Set-Content release-notes.md -Encoding utf8
+          Get-Content release-notes.md | Write-Host
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.ver.outputs.tag }}
+          body_path: release-notes.md
           files: |
             NvDriverKit-*.zip
             NvDriverKit-*.sha256
