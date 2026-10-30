@@ -35,7 +35,7 @@
 #include <wchar.h>
 
 #define NVDK_NAME     L"NvDriverKit"
-#define NVDK_VERSION  L"1.1.0"
+#define NVDK_VERSION  L"1.1.1"
 
 /* --------------------------------------------------------------------------
  * Pins. The UI automation below is written against one exact NVCleanstall

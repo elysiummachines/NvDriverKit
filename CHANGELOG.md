@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.1] - 2026-10-30
+
+- `verify-binary.ps1` rejects an unknown parameter instead of silently checking the default binary
+- README binary size figures match the released build
+
 ## [1.1.0] - 2026-10-31
 
 - Fetch Settings button saves your current driver settings without opening a PowerShell prompt
