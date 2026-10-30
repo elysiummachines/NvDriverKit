@@ -36,9 +36,10 @@ No frameworks, no runtime dependencies, ~133 KB.
 
 ## Features
 
-- **One button.** Version check, wizard, build, install, post-install and reboot prompt in a single run.
+- **One click to install.** Version check, wizard, build, install, post-install and reboot prompt in a single run.
 - **Reinstalls the Control Panel** from the Microsoft Store, which DCH driver packages leave out.
 - **Restores your settings:** profiles from `MySettings.nip`, plus DSR Factors and Smoothness.
+- **Fetch Settings.** A second button saves what the driver is set to now, so the first run has something to restore. No PowerShell prompt needed.
 - **Shareable package.** The built installer lands on your Desktop so you can keep or pass it on.
 - **Verified, not assumed.** Every checkbox is read back, every hash re-checked, the installed version re-read.
 - **Signature and hash pinned.** Authenticode, signer thumbprint and SHA-256, with trust-on-first-use.
@@ -97,20 +98,8 @@ Nothing is installed unless every check above passed.
 - Windows 10 or 11, x64, with an NVIDIA GPU
 - Administrator rights
 - [NVCleanstall 1.19.0](https://www.techpowerup.com/download/techpowerup-nvcleanstall/)
-- `NvPostInstall.ps1`
+- `NvPostInstall.ps1`, which ships in this repo and inside the release zip
 - [WinLibs GCC](https://winlibs.com/) (UCRT) to build; no Windows SDK required
-
-### One-Time Setup
-
-**Do this first, while your driver settings are the way you like them.** The run
-refuses to start without it, because a clean install erases everything it
-restores:
-
-```powershell
-.\NvPostInstall.ps1 -Capture
-```
-
-This writes `Documents\NvPostInstall\MySettings.nip` and `DsrSettings.json`.
 
 ### Build
 
@@ -139,6 +128,25 @@ To redraw the icon (nine sizes, 16 to 256):
 powershell -ExecutionPolicy Bypass -File res\make-icon.ps1
 ```
 
+### One-Time Setup
+
+**Do this before your first install, while your driver settings are the way you
+like them.** The run refuses to start without it, because a clean install erases
+everything it restores.
+
+Run `NvDriverKit.exe` as administrator and click **Fetch Settings**. It reads
+the driver, saves what it finds, and reports how many settings it captured.
+Nothing is installed and nothing about the driver is changed.
+
+This writes `Documents\NvPostInstall\MySettings.nip` and `DsrSettings.json`,
+following a relocated Documents folder if you have moved it.
+
+The same thing without the GUI, if you would rather use a prompt:
+
+```powershell
+.\NvPostInstall.ps1 -Capture
+```
+
 ### Usage
 
 Run `build\NvDriverKit.exe` as administrator. The manifest asks for it.
@@ -146,6 +154,7 @@ Run `build\NvDriverKit.exe` as administrator. The manifest asks for it.
 | Flag | Effect |
 |---|---|
 | *(none)* | Full run |
+| `--capture` | Fetches and saves your current settings, the same path the Fetch Settings button takes |
 | `--force` | Proceed even when the installed driver is already current (clean reinstall of the same version) |
 | `--dry-run` | Drives the wizard and verifies everything, stops at the Finished page without building |
 | `--probe` | Launches NVCleanstall and dumps the UIA control tree |
@@ -168,8 +177,9 @@ script.
 
 Tagging is the whole release process. Pushing a `v*` tag runs
 [`release.yml`](.github/workflows/release.yml), which stamps the version into
-`res/app.rc`, builds with MinGW-w64, verifies the binary and publishes a GitHub
-Release carrying the zip and its SHA-256:
+`res/app.rc`, `src/common.h` and `res/app.manifest`, builds with MinGW-w64,
+verifies the binary and publishes a GitHub Release carrying the zip and its
+SHA-256:
 
 ```bash
 git tag -s v1.0.1 -m "NvDriverKit v1.0.1"
@@ -257,7 +267,7 @@ decision instead.
 **2. The `.nip` precondition is checked before the wipe, not after.** A clean
 install erases your driver settings; the script restores them from
 `Documents\NvPostInstall\MySettings.nip`. If that file is missing, the run stops
-before anything is touched and tells you to run `-Capture` first.
+before anything is touched and tells you to click **Fetch Settings** first.
 
 **3. Stale workspace.** NVCleanstall reuses `%TEMP%\NVCleanstall`. A leftover
 tree from an earlier session can be picked up mid-build, so it is deleted

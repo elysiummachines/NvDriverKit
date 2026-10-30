@@ -19,6 +19,8 @@ static const GUID k_FOLDERID_Desktop =
 #define T_DOWNLOAD_MS  2700000    /* driver download + repack: 45 min */
 #define T_BUILD_MS     1800000    /* package build: 30 min */
 #define T_INSTALL_MS   3600000    /* driver install: 60 min */
+#define T_CAPTURE_MS   600000     /* settings capture: 10 min, which allows for
+                                     a first-use Profile Inspector download */
 
 static BOOL cancelled(volatile LONG *flag)
 {
@@ -419,8 +421,8 @@ static void clear_stale_workspace(void)
 }
 
 /* A clean install wipes driver settings. NvPostInstall.ps1 restores them from
- * MySettings.nip - which only exists if -Capture was run beforehand. Finding
- * that out after the wipe is too late, so check now. */
+ * MySettings.nip - which only exists if Fetch Settings has been run first.
+ * Finding that out after the wipe is too late, so check now. */
 static BOOL check_settings_capture(void)
 {
     wchar_t *docs = NULL;
@@ -436,12 +438,13 @@ static BOOL check_settings_capture(void)
 
     if (!GetFileAttributesExW(nip, GetFileExInfoStandard, &fad)) {
         log_write(LG_FAIL, L"No saved driver settings at %s", nip);
-        log_write(LG_INFO, L"A clean install erases your settings. Capture them first:");
-        log_write(LG_INFO, L"  powershell -ExecutionPolicy Bypass -File NvPostInstall.ps1 -Capture");
+        log_write(LG_INFO, L"A clean install erases your settings.");
+        log_write(LG_INFO, L"Click Fetch Settings to save them, then run again.");
         return FALSE;
     }
     if (fad.nFileSizeLow < 64 && fad.nFileSizeHigh == 0) {
-        log_write(LG_FAIL, L"MySettings.nip is empty (%lu bytes) - re-run -Capture", fad.nFileSizeLow);
+        log_write(LG_FAIL, L"MySettings.nip is empty (%lu bytes) - click Fetch Settings again",
+                  fad.nFileSizeLow);
         return FALSE;
     }
     FileTimeToSystemTime(&fad.ftLastWriteTime, &st);
@@ -1110,6 +1113,166 @@ cleanup:
         CloseHandle(hproc);
     }
     return result;
+}
+
+/* ====================================================================
+ *  Fetch Settings - save what the driver is set to right now, so a later
+ *  clean install has something to restore.
+ * ==================================================================== */
+
+/* Counts "<ProfileSetting" in a .nip, so the outcome is reported from what
+ * reached the disk rather than from what the script said it did.
+ *
+ * Profile Inspector writes the file as UTF-8 with a BOM while declaring
+ * encoding="utf-16" in the XML header. The bytes really are UTF-8, so a byte
+ * search is right here despite what the declaration claims. Returns -1 when
+ * the file cannot be read. */
+static int nip_setting_count(const wchar_t *path)
+{
+    HANDLE      h;
+    DWORD       size, got = 0;
+    char       *buf;
+    const char *p;
+    int         n = 0;
+
+    h = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ, NULL,
+                    OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (h == INVALID_HANDLE_VALUE) return -1;
+
+    size = GetFileSize(h, NULL);
+    if (size == INVALID_FILE_SIZE || size > (8u << 20)) {
+        CloseHandle(h);
+        return -1;
+    }
+    buf = (char *)malloc((size_t)size + 1);
+    if (!buf) {
+        CloseHandle(h);
+        return -1;
+    }
+    if (!ReadFile(h, buf, size, &got, NULL)) {
+        free(buf);
+        CloseHandle(h);
+        return -1;
+    }
+    CloseHandle(h);
+    buf[got] = '\0';
+
+    for (p = buf; (p = strstr(p, "<ProfileSetting")) != NULL; p++)
+        n++;
+
+    free(buf);
+    return n;
+}
+
+/* Documents\NvPostInstall\<leaf>, following a relocated Documents folder the
+ * same way the script does. */
+static BOOL docs_file(const wchar_t *leaf, wchar_t *out)
+{
+    wchar_t *docs = NULL;
+
+    if (FAILED(SHGetKnownFolderPath(&k_FOLDERID_Documents, 0, NULL, &docs)) || !docs)
+        return FALSE;
+    _snwprintf(out, NVDK_MAX_PATH, L"%s\\NvPostInstall\\%s", docs, leaf);
+    CoTaskMemFree(docs);
+    out[NVDK_MAX_PATH - 1] = L'\0';
+    return TRUE;
+}
+
+/* Logs size and write time for one saved file. The timestamp is the tell that
+ * the script wrote it now rather than leaving an older copy in place. */
+static BOOL report_saved(const wchar_t *path, const wchar_t *what)
+{
+    WIN32_FILE_ATTRIBUTE_DATA fad;
+    FILETIME    local;
+    SYSTEMTIME  st;
+
+    if (!GetFileAttributesExW(path, GetFileExInfoStandard, &fad))
+        return FALSE;
+
+    FileTimeToLocalFileTime(&fad.ftLastWriteTime, &local);
+    FileTimeToSystemTime(&local, &st);
+    log_write(LG_OK, L"%s: %lu bytes, written %04d-%02d-%02d %02d:%02d",
+              what, fad.nFileSizeLow,
+              st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute);
+    return TRUE;
+}
+
+RunResult wizard_capture(const RunConfig *cfg, volatile LONG *cancel)
+{
+    wchar_t script[NVDK_MAX_PATH], pshell[NVDK_MAX_PATH], args[NVDK_MAX_PATH];
+    wchar_t nip[NVDK_MAX_PATH], dsr[NVDK_MAX_PATH];
+    DWORD   exitcode = 0;
+    int     count;
+
+    log_write(LG_STEP, L"Fetching your current driver settings");
+    log_write(LG_INFO, L"This reads the driver and saves what it finds. "
+                       L"Nothing is installed and no setting is changed.");
+
+    if (cancelled(cancel)) return RUN_ABORTED;
+
+    /* Staged exactly like the install path: hash pinned, copied into an
+     * admin-only directory and run from there, never from Downloads. */
+    if (!stage_input(cfg, cfg->post_script, L"NvPostInstall.ps1", FALSE,
+                     L"postinstall_sha256", script))
+        return RUN_ABORTED;
+
+    if (cancelled(cancel)) return RUN_ABORTED;
+
+    _snwprintf(pshell, NVDK_MAX_PATH,
+               L"%s\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+               _wgetenv(L"SystemRoot") ? _wgetenv(L"SystemRoot") : L"C:\\Windows");
+    pshell[NVDK_MAX_PATH - 1] = L'\0';
+
+    _snwprintf(args, NVDK_MAX_PATH,
+               L"-NoProfile -ExecutionPolicy Bypass -File \"%s\" -Capture", script);
+    args[NVDK_MAX_PATH - 1] = L'\0';
+
+    /* -Capture never calls Read-Host, so there is nothing to feed it. Its
+     * output is relayed into this program's log, which is where the table of
+     * captured settings appears. */
+    log_write(LG_STEP, L"Running NvPostInstall.ps1 -Capture");
+    if (!proc_run_logged(pshell, args, NULL, T_CAPTURE_MS, &exitcode)) {
+        log_write(LG_FAIL, L"The capture script did not complete");
+        return RUN_ERROR;
+    }
+    if (exitcode != 0) {
+        log_write(LG_FAIL, L"Capture script exited with code %lu", exitcode);
+        return RUN_ERROR;
+    }
+
+    /* Confirm against the disk rather than trusting the script's own output. */
+    log_write(LG_STEP, L"Checking what was saved");
+    if (!docs_file(L"MySettings.nip", nip) || !docs_file(L"DsrSettings.json", dsr)) {
+        log_write(LG_FAIL, L"Could not locate your Documents folder");
+        return RUN_ERROR;
+    }
+
+    if (!report_saved(nip, L"Driver profile (MySettings.nip)")) {
+        log_write(LG_FAIL, L"Nothing was written to %s", nip);
+        return RUN_ERROR;
+    }
+
+    count = nip_setting_count(nip);
+    if (count < 0) {
+        log_write(LG_FAIL, L"The saved profile could not be read back");
+        return RUN_ERROR;
+    }
+    if (count == 0) {
+        log_write(LG_FAIL, L"No customized settings found. Change something in "
+                           L"the NVIDIA Control Panel, click Apply, then fetch "
+                           L"again.");
+        return RUN_ABORTED;
+    }
+    log_write(LG_OK, L"Found %d customized driver setting(s)", count);
+
+    /* DSR is optional: the registry values only exist once DSR has been set
+     * at least once, so a miss here is worth saying but is not a failure. */
+    if (!report_saved(dsr, L"DSR factors and smoothness (DsrSettings.json)"))
+        log_write(LG_WARN, L"No DSR data saved. Set DSR once in the Control "
+                           L"Panel, click Apply, then fetch again.");
+
+    log_write(LG_OK, L"Settings saved. A clean install can now restore them.");
+    return RUN_CAPTURED;
 }
 
 /* ====================================================================
