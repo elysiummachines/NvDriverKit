@@ -98,27 +98,8 @@ Nothing is installed unless every check above passed.
 - Windows 10 or 11, x64, with an NVIDIA GPU
 - Administrator rights
 - [NVCleanstall 1.19.0](https://www.techpowerup.com/download/techpowerup-nvcleanstall/)
-- `NvPostInstall.ps1`
+- `NvPostInstall.ps1`, which ships in this repo and inside the release zip
 - [WinLibs GCC](https://winlibs.com/) (UCRT) to build; no Windows SDK required
-
-### One-Time Setup
-
-**Do this first, while your driver settings are the way you like them.** The run
-refuses to start without it, because a clean install erases everything it
-restores.
-
-Click **Fetch Settings**. It reads the driver, saves what it finds, and reports
-how many settings it captured. Nothing is installed and nothing about the driver
-is changed.
-
-This writes `Documents\NvPostInstall\MySettings.nip` and `DsrSettings.json`,
-following a relocated Documents folder if you have moved it.
-
-The same thing without the GUI, if you would rather use a prompt:
-
-```powershell
-.\NvPostInstall.ps1 -Capture
-```
 
 ### Build
 
@@ -145,6 +126,25 @@ To redraw the icon (nine sizes, 16 to 256):
 
 ```bat
 powershell -ExecutionPolicy Bypass -File res\make-icon.ps1
+```
+
+### One-Time Setup
+
+**Do this before your first install, while your driver settings are the way you
+like them.** The run refuses to start without it, because a clean install erases
+everything it restores.
+
+Run `NvDriverKit.exe` as administrator and click **Fetch Settings**. It reads
+the driver, saves what it finds, and reports how many settings it captured.
+Nothing is installed and nothing about the driver is changed.
+
+This writes `Documents\NvPostInstall\MySettings.nip` and `DsrSettings.json`,
+following a relocated Documents folder if you have moved it.
+
+The same thing without the GUI, if you would rather use a prompt:
+
+```powershell
+.\NvPostInstall.ps1 -Capture
 ```
 
 ### Usage
@@ -177,8 +177,9 @@ script.
 
 Tagging is the whole release process. Pushing a `v*` tag runs
 [`release.yml`](.github/workflows/release.yml), which stamps the version into
-`res/app.rc`, builds with MinGW-w64, verifies the binary and publishes a GitHub
-Release carrying the zip and its SHA-256:
+`res/app.rc`, `src/common.h` and `res/app.manifest`, builds with MinGW-w64,
+verifies the binary and publishes a GitHub Release carrying the zip and its
+SHA-256:
 
 ```bash
 git tag -s v1.0.1 -m "NvDriverKit v1.0.1"
@@ -266,7 +267,7 @@ decision instead.
 **2. The `.nip` precondition is checked before the wipe, not after.** A clean
 install erases your driver settings; the script restores them from
 `Documents\NvPostInstall\MySettings.nip`. If that file is missing, the run stops
-before anything is touched and tells you to run `-Capture` first.
+before anything is touched and tells you to click **Fetch Settings** first.
 
 **3. Stale workspace.** NVCleanstall reuses `%TEMP%\NVCleanstall`. A leftover
 tree from an earlier session can be picked up mid-build, so it is deleted
