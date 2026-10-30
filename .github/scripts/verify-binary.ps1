@@ -11,6 +11,10 @@
         silently stopped working)
       - no MinGW runtime DLLs leaked into the imports
 #>
+# CmdletBinding makes this an advanced script, so an unknown parameter is an
+# error. Without it PowerShell quietly drops unmatched arguments into $args
+# and checks the default instead, which is indistinguishable from a pass.
+[CmdletBinding()]
 param([string]$Exe = 'build\NvDriverKit.exe')
 
 $ErrorActionPreference = 'Stop'
