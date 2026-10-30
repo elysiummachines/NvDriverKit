@@ -265,6 +265,7 @@ void     uia_log_element(UiaCtx *ctx, UiaEl *el, const wchar_t *label);
 typedef enum {
     RUN_UP_TO_DATE,     /* installed driver already matches the best driver */
     RUN_INSTALLED,      /* package built, installed, post-install script ran */
+    RUN_CAPTURED,       /* settings read back from the driver and saved */
     RUN_ABORTED,        /* a precondition or verification failed */
     RUN_ERROR
 } RunResult;
@@ -281,6 +282,12 @@ typedef struct {
 
 BOOL      cfg_load(RunConfig *cfg);
 RunResult wizard_run(const RunConfig *cfg, volatile LONG *cancel_flag);
+
+/* Fetch Settings: stages and runs NvPostInstall.ps1 -Capture so the current
+ * driver settings are saved without the user opening a PowerShell prompt,
+ * then reports what actually landed on disk. Reads the driver and writes only
+ * the two files under Documents\NvPostInstall; it installs nothing. */
+RunResult wizard_capture(const RunConfig *cfg, volatile LONG *cancel_flag);
 
 /* Exposed for --probe. */
 BOOL wizard_probe(const RunConfig *cfg);
