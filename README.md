@@ -8,7 +8,7 @@
 [![Downloads](https://img.shields.io/github/downloads/elysiummachines/NvDriverKit/total?style=flat-square&color=ff0000)](https://github.com/elysiummachines/NvDriverKit/releases)
 [![C](https://img.shields.io/badge/C-C11-blue?style=flat-square)](https://en.cppreference.com/w/c/11)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?style=flat-square)](https://www.microsoft.com/windows)
-[![Size](https://img.shields.io/badge/Binary-139%20KB-brightgreen?style=flat-square)](#verification)
+[![Size](https://img.shields.io/badge/Binary-132%20KB-brightgreen?style=flat-square)](#verification)
 [![License](https://img.shields.io/badge/License-MIT-grey.svg?style=flat-square)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/elysiummachines/NvDriverKit?style=social)](https://github.com/elysiummachines/NvDriverKit/stargazers)
 
@@ -30,7 +30,7 @@ Modern DCH driver packages no longer ship the Control Panel applet, and a clean
 install erases your profiles and DSR factors. NvDriverKit handles both, so a
 clean install costs you nothing.
 
-No frameworks, no runtime dependencies, ~139 KB.
+No frameworks, no runtime dependencies, ~132 KB.
 
 ## Features
 
@@ -271,7 +271,7 @@ silent bump breaks every automation path. The exe is pinned by signer thumbprint
 | Checked | Result |
 |---|---|
 | Compiles, zero warnings at `-Wall -Wextra -Wshadow` | yes |
-| Standalone binary | 142,336 bytes, 20 system DLLs, no others |
+| Standalone binary | 135,680 bytes, 21 system DLLs, no others |
 | ASLR / high-entropy ASLR / DEP | on (`DllCharacteristics 0x0160`) |
 | Control Flow Guard | off (MinGW cannot emit it; use `build-msvc.bat`) |
 | Embedded manifest | exactly one, `requireAdministrator`, no `asInvoker` |
@@ -283,6 +283,10 @@ silent bump breaks every automation path. The exe is pinned by signer thumbprint
 | `nv_set_interrupt_priority` | writes and reads back on the real device |
 | Silent script relay + stdin to `Read-Host` | verified against a stand-in script |
 | Full run with the silent relay and registry write | completed; no console window, script exit 0, `DevicePriority = 3` |
+
+Sizes are from the released build. A local build with a different GCC will differ by a
+few KB and may pull one more UCRT API set, so `verify-binary.ps1` asserts the properties
+that matter rather than an exact byte count.
 
 ## Technical Notes
 
