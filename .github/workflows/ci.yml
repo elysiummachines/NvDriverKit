@@ -22,6 +22,9 @@ jobs:
         with:
           msystem: UCRT64
           release: false
+          # Caches the installed packages between runs. The toolchain install
+          # is the bulk of this job; the build itself is a few seconds.
+          cache: true
           install: >-
             mingw-w64-ucrt-x86_64-gcc
             mingw-w64-ucrt-x86_64-binutils
