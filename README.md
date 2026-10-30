@@ -10,7 +10,7 @@
 [![Downloads](https://img.shields.io/github/downloads/elysiummachines/NvDriverKit/total?style=flat-square&color=ff0000)](https://github.com/elysiummachines/NvDriverKit/releases)
 [![C](https://img.shields.io/badge/C-C11-blue?style=flat-square)](https://en.cppreference.com/w/c/11)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?style=flat-square)](https://www.microsoft.com/windows)
-[![Size](https://img.shields.io/badge/Binary-~133%20KB-brightgreen?style=flat-square)](#verification)
+[![Size](https://img.shields.io/badge/Binary-~136%20KB-brightgreen?style=flat-square)](#verification)
 [![License](https://img.shields.io/badge/License-MIT-grey.svg?style=flat-square)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/elysiummachines/NvDriverKit?style=social)](https://github.com/elysiummachines/NvDriverKit/stargazers)
 
@@ -32,7 +32,7 @@ Modern DCH driver packages no longer ship the Control Panel applet, and a clean
 install erases your profiles and DSR factors. NvDriverKit handles both, so a
 clean install costs you nothing.
 
-No frameworks, no runtime dependencies, ~133 KB.
+No frameworks, no runtime dependencies, ~136 KB.
 
 ## Features
 
@@ -283,7 +283,7 @@ silent bump breaks every automation path. The exe is pinned by signer thumbprint
 | Checked | Result |
 |---|---|
 | Compiles, zero warnings at `-Wall -Wextra -Wshadow` | yes |
-| Standalone binary | about 133 KB, system DLLs only, no bundled runtime |
+| Standalone binary | about 136 KB, system DLLs only, no bundled runtime |
 | ASLR / high-entropy ASLR / DEP | on (`DllCharacteristics 0x0160`) |
 | Control Flow Guard | off (MinGW cannot emit it; use `build-msvc.bat`) |
 | Embedded manifest | exactly one, `requireAdministrator`, no `asInvoker` |
