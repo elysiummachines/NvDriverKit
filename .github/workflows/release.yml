@@ -70,7 +70,7 @@ jobs:
         run: |
           $name = "NvDriverKit-${{ steps.ver.outputs.tag }}-x64"
           New-Item -ItemType Directory -Path pkg | Out-Null
-          Copy-Item build\NvDriverKit.exe, README.md, LICENSE pkg\
+          Copy-Item build\NvDriverKit.exe, README.md, LICENSE, NvPostInstall.ps1 pkg\
           Compress-Archive -Path pkg\* -DestinationPath "$name.zip"
 
           # Publish the hash alongside it: the exe is unsigned, so this is

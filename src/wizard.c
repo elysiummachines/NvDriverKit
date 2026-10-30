@@ -223,10 +223,30 @@ static void cfg_path(const RunConfig *cfg, wchar_t *out)
     out[NVDK_MAX_PATH - 1] = L'\0';
 }
 
+/* Builds "<directory of this exe>\<leaf>". NvPostInstall.ps1 ships beside the
+ * exe, so that copy is the default rather than a path that only existed on the
+ * machine this was written on. Leaves out empty if the module path cannot be
+ * read, and the caller falls back to a bare filename. */
+static void exe_sibling(const wchar_t *leaf, wchar_t *out)
+{
+    wchar_t *slash;
+    DWORD    n;
+
+    n = GetModuleFileNameW(NULL, out, NVDK_MAX_PATH);
+    if (n == 0 || n >= NVDK_MAX_PATH) { out[0] = L'\0'; return; }
+    out[NVDK_MAX_PATH - 1] = L'\0';
+
+    slash = wcsrchr(out, L'\\');
+    if (!slash) { out[0] = L'\0'; return; }
+    slash[1] = L'\0';
+    wcsncat(out, leaf, NVDK_MAX_PATH - wcslen(out) - 1);
+}
+
 BOOL cfg_load(RunConfig *cfg)
 {
     wchar_t *pd = NULL;
     wchar_t ini[NVDK_MAX_PATH];
+    wchar_t post_default[NVDK_MAX_PATH];
 
     ZeroMemory(cfg, sizeof(*cfg));
 
@@ -264,9 +284,11 @@ BOOL cfg_load(RunConfig *cfg)
     GetPrivateProfileStringW(L"paths", L"NVCleanstall",
         L"F:\\Windows\\Downloads\\NVCleanstall_1.19.0.exe",
         cfg->nvcleanstall, NVDK_MAX_PATH, ini);
+    exe_sibling(L"NvPostInstall.ps1", post_default);
+    if (!post_default[0])
+        wcsncpy(post_default, L"NvPostInstall.ps1", NVDK_MAX_PATH - 1);
     GetPrivateProfileStringW(L"paths", L"PostInstallScript",
-        L"F:\\Windows\\Downloads\\NvPostInstall.ps1",
-        cfg->post_script, NVDK_MAX_PATH, ini);
+        post_default, cfg->post_script, NVDK_MAX_PATH, ini);
 
     /* Write the defaults back so the file is self-documenting on first run. */
     WritePrivateProfileStringW(L"paths", L"NVCleanstall", cfg->nvcleanstall, ini);
