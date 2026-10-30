@@ -1,6 +1,8 @@
 <div align="center">
 
-# ⚡ NvDriverKit
+<img src="res/icon.png" alt="NvDriverKit icon" width="96">
+
+# NvDriverKit
 **One-click verified NVIDIA clean installs. Reinstalls the old-school Control Panel and restores all your settings.**
 
 [![CI](https://github.com/elysiummachines/NvDriverKit/actions/workflows/ci.yml/badge.svg)](https://github.com/elysiummachines/NvDriverKit/actions/workflows/ci.yml)

@@ -123,5 +123,10 @@ $w2.Flush()
 [System.IO.File]::WriteAllBytes($OutFile, $out.ToArray())
 $w2.Dispose(); $out.Dispose()
 
+# The README header shows the same icon, so write the 256px image out on its
+# own as well. It is the PNG already built above, so the two cannot drift.
+$png256 = ($images | Where-Object { $_.Size -eq 256 }).Data
+[System.IO.File]::WriteAllBytes((Join-Path $PSScriptRoot 'icon.png'), $png256)
+
 $f = Get-Item $OutFile
 "Wrote {0} ({1:N0} bytes, {2} sizes: {3})" -f $f.Name, $f.Length, $images.Count, ($Sizes -join ', ')
