@@ -3,12 +3,15 @@
     Writes the tag's version into the files that carry it.
 
 .DESCRIPTION
-    Two places hold a version a user can see:
-      res\app.rc    VERSIONINFO, shown in Properties > Details
-      src\common.h  NVDK_VERSION, shown in the window title
+    Three places hold a version:
+      res\app.rc        VERSIONINFO, shown in Properties > Details
+      src\common.h      NVDK_VERSION, shown in the window title
+      res\app.manifest  assemblyIdentity, the side-by-side identity
 
-    Both carry 1.0.0 in the repository so a local build.bat works without
-    arguments, and a tagged build overwrites them from the tag.
+    All three carry the version being prepared, so a plain build.bat with no
+    arguments shows the right number, and a tagged build overwrites them from
+    the tag. Only the NvDriverKit assemblyIdentity is touched: the
+    Common-Controls dependency keeps its own 6.0.0.0.
 
     Each pattern must match exactly once, which catches a drifted or
     duplicated line rather than shipping a binary stamped with the wrong
@@ -18,8 +21,9 @@
 #>
 param(
     [Parameter(Mandatory)][string]$Tag,
-    [string]$Rc     = 'res\app.rc',
-    [string]$Header = 'src\common.h'
+    [string]$Rc       = 'res\app.rc',
+    [string]$Header   = 'src\common.h',
+    [string]$Manifest = 'res\app.manifest'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -57,6 +61,11 @@ $targets = @(
            Pattern = '(#define[ \t]+NVDK_VERSION[ \t]+L")[^"]*(")'
            Replace = '${1}' + $short + '${2}' }
     )}
+    @{ Path = $Manifest; Edits = @(
+        @{ Name = 'assemblyIdentity version'
+           Pattern = '(name="NvDriverKit"[ \t]+version=")[^"]*(")'
+           Replace = '${1}' + $dotted + '${2}' }
+    )}
 )
 
 foreach ($target in $targets) {
@@ -77,4 +86,6 @@ Write-Host "Version $dotted (title bar $short):"
 Select-String -Path $Rc -Pattern 'FILEVERSION|PRODUCTVERSION|"FileVersion"|"ProductVersion"' |
     ForEach-Object { Write-Host "  $($_.Line.Trim())" }
 Select-String -Path $Header -Pattern 'NVDK_VERSION' |
+    ForEach-Object { Write-Host "  $($_.Line.Trim())" }
+Select-String -Path $Manifest -Pattern 'name="NvDriverKit"' |
     ForEach-Object { Write-Host "  $($_.Line.Trim())" }
