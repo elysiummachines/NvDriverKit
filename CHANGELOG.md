@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0] - 2026-10-31
+
+- Fetch Settings button saves your current driver settings without opening a PowerShell prompt
+- The app reports how many settings were captured, read back from the saved file rather than from the script output
+- `--capture` runs the same path unattended
+
 ## [1.0.1] - 2026-10-30
 
 - NvPostInstall.ps1 is tracked in the repo and ships inside the release zip

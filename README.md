@@ -36,9 +36,10 @@ No frameworks, no runtime dependencies, ~133 KB.
 
 ## Features
 
-- **One button.** Version check, wizard, build, install, post-install and reboot prompt in a single run.
+- **One click to install.** Version check, wizard, build, install, post-install and reboot prompt in a single run.
 - **Reinstalls the Control Panel** from the Microsoft Store, which DCH driver packages leave out.
 - **Restores your settings:** profiles from `MySettings.nip`, plus DSR Factors and Smoothness.
+- **Fetch Settings.** A second button saves what the driver is set to now, so the first run has something to restore. No PowerShell prompt needed.
 - **Shareable package.** The built installer lands on your Desktop so you can keep or pass it on.
 - **Verified, not assumed.** Every checkbox is read back, every hash re-checked, the installed version re-read.
 - **Signature and hash pinned.** Authenticode, signer thumbprint and SHA-256, with trust-on-first-use.
@@ -104,13 +105,20 @@ Nothing is installed unless every check above passed.
 
 **Do this first, while your driver settings are the way you like them.** The run
 refuses to start without it, because a clean install erases everything it
-restores:
+restores.
+
+Click **Fetch Settings**. It reads the driver, saves what it finds, and reports
+how many settings it captured. Nothing is installed and nothing about the driver
+is changed.
+
+This writes `Documents\NvPostInstall\MySettings.nip` and `DsrSettings.json`,
+following a relocated Documents folder if you have moved it.
+
+The same thing without the GUI, if you would rather use a prompt:
 
 ```powershell
 .\NvPostInstall.ps1 -Capture
 ```
-
-This writes `Documents\NvPostInstall\MySettings.nip` and `DsrSettings.json`.
 
 ### Build
 
@@ -146,6 +154,7 @@ Run `build\NvDriverKit.exe` as administrator. The manifest asks for it.
 | Flag | Effect |
 |---|---|
 | *(none)* | Full run |
+| `--capture` | Fetches and saves your current settings, the same path the Fetch Settings button takes |
 | `--force` | Proceed even when the installed driver is already current (clean reinstall of the same version) |
 | `--dry-run` | Drives the wizard and verifies everything, stops at the Finished page without building |
 | `--probe` | Launches NVCleanstall and dumps the UIA control tree |
