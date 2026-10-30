@@ -5,6 +5,7 @@
 
 # Leave these alone entirely - never diff, never convert line endings.
 *.ico binary
+*.gif binary
 *.res binary
 *.o   binary
 *.exe binary

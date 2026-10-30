@@ -3,7 +3,7 @@
 # ⚡ NvDriverKit
 **One-click verified NVIDIA clean installs. Reinstalls the old-school Control Panel and restores all your settings.**
 
-[![Release](https://img.shields.io/github/v/release/elysiummachines/NvDriverKit?style=flat-square&color=blue)](https://github.com/elysiummachines/NvDriverKit/releases)
+[![Release](https://img.shields.io/github/v/tag/elysiummachines/NvDriverKit?style=flat-square&color=blue&label=release)](https://github.com/elysiummachines/NvDriverKit/releases)
 [![Downloads](https://img.shields.io/github/downloads/elysiummachines/NvDriverKit/total?style=flat-square&color=ff0000)](https://github.com/elysiummachines/NvDriverKit/releases)
 [![C](https://img.shields.io/badge/C-C11-blue?style=flat-square)](https://en.cppreference.com/w/c/11)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?style=flat-square)](https://www.microsoft.com/windows)
@@ -15,7 +15,7 @@
 
 </div>
 
-<!-- Drop a screenshot or demo.gif here: ![NvDriverKit](demo.gif) -->
+![NvDriverKit demo](demo.gif)
 
 ## Overview
 
