@@ -3,11 +3,12 @@
 # ⚡ NvDriverKit
 **One-click verified NVIDIA clean installs. Reinstalls the old-school Control Panel and restores all your settings.**
 
+[![CI](https://github.com/elysiummachines/NvDriverKit/actions/workflows/ci.yml/badge.svg)](https://github.com/elysiummachines/NvDriverKit/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/tag/elysiummachines/NvDriverKit?style=flat-square&color=blue&label=release)](https://github.com/elysiummachines/NvDriverKit/releases)
 [![Downloads](https://img.shields.io/github/downloads/elysiummachines/NvDriverKit/total?style=flat-square&color=ff0000)](https://github.com/elysiummachines/NvDriverKit/releases)
 [![C](https://img.shields.io/badge/C-C11-blue?style=flat-square)](https://en.cppreference.com/w/c/11)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?style=flat-square)](https://www.microsoft.com/windows)
-[![Size](https://img.shields.io/badge/Binary-84%20KB-brightgreen?style=flat-square)](#verification)
+[![Size](https://img.shields.io/badge/Binary-139%20KB-brightgreen?style=flat-square)](#verification)
 [![License](https://img.shields.io/badge/License-MIT-grey.svg?style=flat-square)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/elysiummachines/NvDriverKit?style=social)](https://github.com/elysiummachines/NvDriverKit/stargazers)
 
@@ -29,7 +30,7 @@ Modern DCH driver packages no longer ship the Control Panel applet, and a clean
 install erases your profiles and DSR factors. NvDriverKit handles both, so a
 clean install costs you nothing.
 
-No frameworks, no runtime dependencies, ~84 KB.
+No frameworks, no runtime dependencies, ~139 KB.
 
 ## Features
 
@@ -161,6 +162,28 @@ A complete run takes roughly 7 minutes: ~40 s through the wizard, ~2 min to
 download and build the package, ~3 min to install, ~20 s for the post-install
 script.
 
+### Releasing
+
+Tagging is the whole release process. Pushing a `v*` tag runs
+[`release.yml`](.github/workflows/release.yml), which stamps the version into
+`res/app.rc`, builds with MinGW-w64, verifies the binary and publishes a GitHub
+Release carrying the zip and its SHA-256:
+
+```bash
+git tag -s v1.0.1 -m "NvDriverKit v1.0.1"
+git push origin v1.0.1
+```
+
+Every push and pull request on `main` runs
+[`ci.yml`](.github/workflows/ci.yml), which builds and runs the same binary
+checks without publishing anything.
+
+Neither workflow can exercise the driver install: that needs an NVIDIA GPU and
+NVCleanstall, so it stays a local `--dry-run`. What CI does guarantee is that
+the code still compiles clean, and that the hardening flags, the single
+`requireAdministrator` manifest and the absence of MinGW runtime DLLs have not
+regressed.
+
 ## Configuration
 
 `%ProgramData%\NvDriverKit\config.ini`, written with defaults on first run:
@@ -248,7 +271,7 @@ silent bump breaks every automation path. The exe is pinned by signer thumbprint
 | Checked | Result |
 |---|---|
 | Compiles, zero warnings at `-Wall -Wextra -Wshadow` | yes |
-| Standalone binary | 84,480 bytes, 20 system DLLs, no others |
+| Standalone binary | 142,336 bytes, 20 system DLLs, no others |
 | ASLR / high-entropy ASLR / DEP | on (`DllCharacteristics 0x0160`) |
 | Control Flow Guard | off (MinGW cannot emit it; use `build-msvc.bat`) |
 | Embedded manifest | exactly one, `requireAdministrator`, no `asInvoker` |

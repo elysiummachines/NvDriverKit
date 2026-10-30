@@ -1,0 +1,86 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to build, e.g. v1.0.1'
+        required: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve the version
+        id: ver
+        shell: pwsh
+        run: |
+          $tag = if ('${{ github.event_name }}' -eq 'workflow_dispatch') {
+            '${{ github.event.inputs.tag }}'
+          } else {
+            '${{ github.ref_name }}'
+          }
+          "tag=$tag" | Out-File $env:GITHUB_OUTPUT -Append
+          Write-Host "Building $tag"
+
+      - name: Setup MinGW-w64 (UCRT64)
+        id: msys2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          release: false
+          install: >-
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-binutils
+
+      - name: Add the toolchain to PATH
+        shell: pwsh
+        run: Add-Content $env:GITHUB_PATH "${{ steps.msys2.outputs.msys2-location }}\ucrt64\bin"
+
+      - name: Stamp the version into the resource
+        shell: pwsh
+        run: .\.github\scripts\stamp-version.ps1 -Tag '${{ steps.ver.outputs.tag }}'
+
+      - name: Build
+        shell: cmd
+        run: build.bat
+
+      - name: Verify the binary
+        shell: pwsh
+        run: .\.github\scripts\verify-binary.ps1
+
+      - name: Package
+        shell: pwsh
+        run: |
+          $name = "NvDriverKit-${{ steps.ver.outputs.tag }}-x64"
+          New-Item -ItemType Directory -Path pkg | Out-Null
+          Copy-Item build\NvDriverKit.exe, README.md, LICENSE pkg\
+          Compress-Archive -Path pkg\* -DestinationPath "$name.zip"
+
+          # Publish the hash alongside it: the exe is unsigned, so this is
+          # the only way a downloader can check they got what CI produced.
+          $hash = (Get-FileHash build\NvDriverKit.exe -Algorithm SHA256).Hash.ToLower()
+          "$hash  NvDriverKit.exe" | Out-File "$name.sha256" -Encoding ascii
+          Write-Host "SHA-256: $hash"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.ver.outputs.tag }}
+          files: |
+            NvDriverKit-*.zip
+            NvDriverKit-*.sha256
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
