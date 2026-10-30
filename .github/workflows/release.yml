@@ -21,6 +21,10 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          # On a tag push this is the tag itself. On workflow_dispatch it is
+          # the tag typed into the input, so a manual run builds that tag's
+          # code rather than whatever main happens to be at.
+          ref: ${{ github.event.inputs.tag || github.ref_name }}
 
       - name: Resolve the version
         id: ver
