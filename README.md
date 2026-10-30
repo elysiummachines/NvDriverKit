@@ -1,7 +1,7 @@
 <div align="center">
 
 # ⚡ NvDriverKit
-**One-click verified NVIDIA clean installs — reinstalls the old-school Control Panel and restores all your settings.**
+**One-click verified NVIDIA clean installs. Reinstalls the old-school Control Panel and restores all your settings.**
 
 [![Release](https://img.shields.io/github/v/release/elysiummachines/NvDriverKit?style=flat-square&color=blue)](https://github.com/elysiummachines/NvDriverKit/releases)
 [![Downloads](https://img.shields.io/github/downloads/elysiummachines/NvDriverKit/total?style=flat-square&color=ff0000)](https://github.com/elysiummachines/NvDriverKit/releases)
@@ -35,7 +35,7 @@ No frameworks, no runtime dependencies, ~84 KB.
 
 - **One button.** Version check, wizard, build, install, post-install and reboot prompt in a single run.
 - **Reinstalls the Control Panel** from the Microsoft Store, which DCH driver packages leave out.
-- **Restores your settings** — profiles from `MySettings.nip`, plus DSR Factors and Smoothness.
+- **Restores your settings:** profiles from `MySettings.nip`, plus DSR Factors and Smoothness.
 - **Shareable package.** The built installer lands on your Desktop so you can keep or pass it on.
 - **Verified, not assumed.** Every checkbox is read back, every hash re-checked, the installed version re-read.
 - **Signature and hash pinned.** Authenticode, signer thumbprint and SHA-256, with trust-on-first-use.
@@ -95,7 +95,7 @@ Nothing is installed unless every check above passed.
 - Administrator rights
 - [NVCleanstall 1.19.0](https://www.techpowerup.com/download/techpowerup-nvcleanstall/)
 - `NvPostInstall.ps1`
-- [WinLibs GCC](https://winlibs.com/) (UCRT) to build — no Windows SDK required
+- [WinLibs GCC](https://winlibs.com/) (UCRT) to build; no Windows SDK required
 
 ### One-Time Setup
 
@@ -138,7 +138,7 @@ powershell -ExecutionPolicy Bypass -File res\make-icon.ps1
 
 ### Usage
 
-Run `build\NvDriverKit.exe` as administrator — the manifest asks for it.
+Run `build\NvDriverKit.exe` as administrator. The manifest asks for it.
 
 | Flag | Effect |
 |---|---|
@@ -184,8 +184,8 @@ postinstall_sha256=...
   `config.ini` on first run. A later mismatch aborts and prints both hashes.
   Clear the `[pins]` entry to accept a deliberate update.
 - **No execution from user-writable paths.** Both inputs normally live in
-  Downloads, which standard users can write — an elevated process must never
-  execute from there. They are copied into `%ProgramData%\NvDriverKit\bin`,
+  Downloads, which standard users can write, and an elevated process must
+  never execute from there. They are copied into `%ProgramData%\NvDriverKit\bin`,
   whose DACL is reset to SYSTEM + Administrators full control, Users
   read/execute. The DACL of anything we are about to run is walked first
   (including its parent directory) and the run is refused if any other
@@ -235,9 +235,9 @@ install erases your driver settings; the script restores them from
 before anything is touched and tells you to run `-Capture` first.
 
 **3. Stale workspace.** NVCleanstall reuses `%TEMP%\NVCleanstall`. A leftover
-tree from an earlier session can be picked up mid-build, so it is deleted first
-— under a guard that only ever removes a directory of that exact name directly
-under `%TEMP%`.
+tree from an earlier session can be picked up mid-build, so it is deleted
+first, under a guard that only ever removes a directory of that exact name
+directly under `%TEMP%`.
 
 **4. NVCleanstall self-updates.** It checks for new versions on its own, and a
 silent bump breaks every automation path. The exe is pinned by signer thumbprint
@@ -250,11 +250,11 @@ silent bump breaks every automation path. The exe is pinned by signer thumbprint
 | Compiles, zero warnings at `-Wall -Wextra -Wshadow` | yes |
 | Standalone binary | 84,480 bytes, 20 system DLLs, no others |
 | ASLR / high-entropy ASLR / DEP | on (`DllCharacteristics 0x0160`) |
-| Control Flow Guard | off — MinGW cannot emit it; use `build-msvc.bat` |
+| Control Flow Guard | off (MinGW cannot emit it; use `build-msvc.bat`) |
 | Embedded manifest | exactly one, `requireAdministrator`, no `asInvoker` |
 | Version math + live registry read | 14/14 assertions, reads 621.01 correctly |
 | Signature pin, hash pin, staging, DACL refusal | exercised on a live run |
-| "Up to date" short-circuit | correct — 621.01 installed vs 621.01 available |
+| "Up to date" short-circuit | correct: 621.01 installed vs 621.01 available |
 | All four wizard pages driven and verified | yes, via `--dry-run --force` |
 | Build → Desktop → install → script → reboot | completed end to end |
 | `nv_set_interrupt_priority` | writes and reads back on the real device |
@@ -272,8 +272,8 @@ NVCleanstall 1.19.0 is a **WPF** app and gives every control a stable
 `AutomationId`, so the automation matches on ids rather than labels wherever an
 id is known. Three things the screenshots got wrong:
 
-- `BestDriver` is **empty** when the page first appears — the version lookup is
-  still running and the combo reads `Loading...`. Searching its text for
+- `BestDriver` is **empty** when the page first appears, because the version
+  lookup is still running and the combo reads `Loading...`. Searching its text for
   `-desktop-win` found nothing. The code now polls `BestDriver` for a non-empty
   name, up to 90 s.
 - The two page-1 checkbox labels are longer than they look. The real names are
@@ -286,7 +286,7 @@ id is known. Three things the screenshots got wrong:
 
 **NVCleanstall does not apply `PreviousTweaks` to the UI.** A `--dry-run` proved
 it: every checkbox on the Tweaks page came up *off*, and `UnattendedReboot` came
-up *on* — its defaults, not the saved settings. The "Use Previous Settings"
+up *on*. Those are its defaults, not the saved settings. The "Use Previous Settings"
 button exists (`UsePrevious`) but would not activate through either Invoke or
 the accessibility default action. So writing the registry alone configures
 nothing; each control has to be driven directly. The registry write is kept
@@ -296,7 +296,7 @@ the mechanism.
 Every checkbox on the Tweaks page has an **AutomationId identical to its key in
 `PreviousTweaks`**, which is what makes driving it directly clean.
 
-Component rows are `ListItem` elements wrapping an **unnamed** `CheckBox` — the
+Component rows are `ListItem` elements wrapping an **unnamed** `CheckBox`. The
 label lives on the row, and reads `"Display Driver"`, not `"Display Driver
 (required)"` as the UI shows it.
 
@@ -357,7 +357,7 @@ at device start, which the reboot covers.
 `g_manifest` in `src/nv.c` is the single source of truth for the Installation
 Tweaks page. It is written to
 `HKCU\Software\techPowerUp\NVCleanstall\PreviousTweaks` as JSON, then verified
-twice — once by reading the registry back, once by reading the UI.
+twice: once by reading the registry back, once by reading the UI.
 
 `DisableNvContainer` must stay `false`: `NvPostInstall.ps1` requires the
 `NVDisplay.ContainerLocalSystem` service, and the NVIDIA Control Panel will not
@@ -386,10 +386,10 @@ The hash pin will stop the run. Then:
 - Combo boxes (Interrupt Policy/Priority, NVENC patch target) are logged but not
   hard-verified in the UI; their values are enforced through the registry
   manifest instead.
-- Secure Boot is fine — the re-signed package installs via NVCleanstall's own
+- Secure Boot is fine. The re-signed package installs via NVCleanstall's own
   root certificate. **Do not enable Memory Integrity (HVCI)**; a patched,
   re-signed driver package will not load with it on.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).
