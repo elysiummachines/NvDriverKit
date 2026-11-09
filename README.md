@@ -20,6 +20,8 @@
 
 ![NvDriverKit demo](demo.gif)
 
+![NvDriverKit demo2](demo2.gif)
+
 ## Overview
 
 NvDriverKit is a plain Win32 C application that automates a full NVIDIA driver
