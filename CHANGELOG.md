@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2026-11-08
+
+- Dark mode, covering the title bar, the window, the buttons, the status line and the log
+- A Theme button cycles Auto, Light and Dark; Auto follows the Windows setting and changes with it while the app is open
+- The choice is remembered in `[ui] Theme` in `config.ini`
+- `--dark`, `--light` and `--theme-auto` set it from the command line
+- Log lines are coloured by level: steps, successes, warnings and failures are now distinguishable at a glance
+- The log moved from a plain edit to a rich edit, and its text cap was raised so a long run cannot lose its tail
+- Buttons are owner-drawn in both themes, with hover, pressed, focus and disabled states
+- Minimum window width is 780, wide enough for the status line beside the new button
+
 ## [1.1.1] - 2026-10-30
 
 - `verify-binary.ps1` rejects an unknown parameter instead of silently checking the default binary
