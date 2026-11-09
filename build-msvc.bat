@@ -22,14 +22,15 @@ set LDFLAGS=/link /SUBSYSTEM:WINDOWS /DYNAMICBASE /NXCOMPAT /HIGHENTROPYVA ^
  /MANIFEST:EMBED /MANIFESTINPUT:res\app.manifest
 
 set LIBS=ole32.lib oleaut32.lib wintrust.lib crypt32.lib bcrypt.lib ^
- advapi32.lib shell32.lib shlwapi.lib comctl32.lib user32.lib gdi32.lib
+ advapi32.lib shell32.lib shlwapi.lib comctl32.lib user32.lib gdi32.lib dwmapi.lib ^
+ uxtheme.lib
 
 echo [1/2] resources
 rc /nologo /fo %OUT%\app.res res\app.rc
 if errorlevel 1 exit /b 1
 
 echo [2/2] compile and link
-cl %CFLAGS% src\main.c src\wizard.c src\uia.c src\nv.c src\sec.c src\log.c ^
+cl %CFLAGS% src\main.c src\wizard.c src\uia.c src\nv.c src\sec.c src\log.c src\theme.c ^
    %OUT%\app.res /Fe%OUT%\NvDriverKit.exe %LDFLAGS% %LIBS%
 if errorlevel 1 exit /b 1
 

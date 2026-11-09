@@ -282,6 +282,10 @@ BOOL cfg_load(RunConfig *cfg)
     sec_harden_directory(cfg->exec_dir);
 
     cfg_path(cfg, ini);
+    /* Published on the config so theme.c can persist the UI choice into the
+     * same file without cfg_path having to leave this translation unit. */
+    wcsncpy(cfg->config_ini, ini, NVDK_MAX_PATH - 1);
+    cfg->config_ini[NVDK_MAX_PATH - 1] = L'\0';
 
     GetPrivateProfileStringW(L"paths", L"NVCleanstall",
         L"F:\\Windows\\Downloads\\NVCleanstall_1.19.0.exe",
