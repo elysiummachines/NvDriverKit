@@ -107,6 +107,59 @@ int  log_fail_count(void);
 void log_reset_counts(void);
 
 /* --------------------------------------------------------------------------
+ * Light and dark theme (theme.c)
+ *
+ * THEME_AUTO follows the Windows "Choose your mode" setting and tracks it
+ * live; the other two override it. The choice is persisted under [ui] Theme
+ * in config.ini.
+ * -------------------------------------------------------------------------- */
+typedef enum { THEME_AUTO, THEME_LIGHT, THEME_DARK } ThemeMode;
+
+typedef struct {
+    COLORREF window;      /* client background */
+    COLORREF text;        /* primary text on that background */
+    COLORREF dim;         /* secondary text */
+    COLORREF edit_bg;     /* log background */
+    COLORREF edit_text;   /* log default text, before a level recolours it */
+    COLORREF border;      /* 1px outline around the log */
+    COLORREF btn_face;
+    COLORREF btn_hot;
+    COLORREF btn_down;
+    COLORREF btn_border;
+    COLORREF btn_text;
+    COLORREF dis_face;    /* disabled button */
+    COLORREF dis_text;
+    COLORREF dis_border;
+    COLORREF def_face;    /* accent-filled default button */
+    COLORREF def_hot;
+    COLORREF def_down;
+    COLORREF def_text;
+    COLORREF focus;       /* focus ring */
+    COLORREF lv_step;     /* one per LogLevel */
+    COLORREF lv_info;
+    COLORREF lv_ok;
+    COLORREF lv_warn;
+    COLORREF lv_fail;
+} ThemeColors;
+
+/* ini_path may be NULL, in which case the choice is not persisted. */
+void       theme_init(const wchar_t *ini_path);
+ThemeMode  theme_mode(void);
+void       theme_set_mode(ThemeMode m);
+ThemeMode  theme_cycle(void);          /* auto -> light -> dark -> auto */
+BOOL       theme_is_dark(void);        /* after resolving AUTO */
+BOOL       theme_system_is_dark(void);
+BOOL       theme_refresh(void);        /* TRUE if the resolved theme flipped */
+const ThemeColors *theme_colors(void);
+COLORREF   theme_level_color(LogLevel lvl);
+HBRUSH     theme_window_brush(void);
+const wchar_t *theme_label(void);      /* text for the theme button */
+void       theme_apply_titlebar(HWND hwnd);
+void       theme_apply_scrollbars(HWND ctl);
+void       theme_draw_button(const DRAWITEMSTRUCT *dis, BOOL hot, BOOL is_default);
+void       theme_frame_control(HDC dc, HWND ctl, HWND parent);
+
+/* --------------------------------------------------------------------------
  * Security primitives (sec.c)
  * -------------------------------------------------------------------------- */
 
@@ -276,6 +329,7 @@ typedef struct {
     wchar_t data_dir[NVDK_MAX_PATH];      /* %ProgramData%\NvDriverKit */
     wchar_t package_dir[NVDK_MAX_PATH];   /* where the built package is saved */
     wchar_t exec_dir[NVDK_MAX_PATH];      /* admin-only dir the package runs from */
+    wchar_t config_ini[NVDK_MAX_PATH];    /* data_dir\config.ini */
     BOOL    dry_run;                      /* drive the wizard, never install */
     BOOL    force;                        /* reinstall even if already current */
 } RunConfig;

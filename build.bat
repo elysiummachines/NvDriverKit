@@ -30,7 +30,7 @@ rem -fstack-protector-strong would otherwise make a runtime dependency.
 set LDFLAGS=-B%PFX% -static -Wl,--nxcompat -Wl,--dynamicbase -Wl,--high-entropy-va -s
 
 set LIBS=-lole32 -loleaut32 -lwintrust -lcrypt32 -lbcrypt -ladvapi32 ^
- -lshell32 -lshlwapi -lcomctl32 -luser32 -lgdi32
+ -lshell32 -lshlwapi -lcomctl32 -luser32 -lgdi32 -ldwmapi -luxtheme
 
 echo [1/3] resources
 windres res\app.rc -O coff -o %OUT%\app.res
@@ -42,7 +42,7 @@ if errorlevel 1 exit /b 1
 
 echo [3/3] compile and link
 gcc %CFLAGS% ^
-  src\main.c src\wizard.c src\uia.c src\nv.c src\sec.c src\log.c ^
+  src\main.c src\wizard.c src\uia.c src\nv.c src\sec.c src\log.c src\theme.c ^
   %OUT%\app.res -o %OUT%\NvDriverKit.exe %LDFLAGS% %LIBS%
 if errorlevel 1 exit /b 1
 

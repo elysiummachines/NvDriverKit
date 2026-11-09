@@ -10,7 +10,7 @@
 [![Downloads](https://img.shields.io/github/downloads/elysiummachines/NvDriverKit/total?style=flat-square&color=ff0000)](https://github.com/elysiummachines/NvDriverKit/releases)
 [![C](https://img.shields.io/badge/C-C11-blue?style=flat-square)](https://en.cppreference.com/w/c/11)
 [![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?style=flat-square)](https://www.microsoft.com/windows)
-[![Size](https://img.shields.io/badge/Binary-~136%20KB-brightgreen?style=flat-square)](#verification)
+[![Size](https://img.shields.io/badge/Binary-~144%20KB-brightgreen?style=flat-square)](#verification)
 [![License](https://img.shields.io/badge/License-MIT-grey.svg?style=flat-square)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/elysiummachines/NvDriverKit?style=social)](https://github.com/elysiummachines/NvDriverKit/stargazers)
 
@@ -32,7 +32,7 @@ Modern DCH driver packages no longer ship the Control Panel applet, and a clean
 install erases your profiles and DSR factors. NvDriverKit handles both, so a
 clean install costs you nothing.
 
-No frameworks, no runtime dependencies, ~136 KB.
+No frameworks, no runtime dependencies, ~144 KB.
 
 ## Features
 
@@ -44,6 +44,7 @@ No frameworks, no runtime dependencies, ~136 KB.
 - **Verified, not assumed.** Every checkbox is read back, every hash re-checked, the installed version re-read.
 - **Signature and hash pinned.** Authenticode, signer thumbprint and SHA-256, with trust-on-first-use.
 - **Silent post-install.** No console window; the script's output is relayed into the app log.
+- **Light and dark.** Follows the Windows theme and changes with it while running, or pin either one from the Theme button. Log lines are coloured by level, so a failure is visible without reading.
 - **Hardened binary.** ASLR, high-entropy ASLR, DEP, stack protector, statically linked.
 
 ## How It Works
@@ -160,6 +161,8 @@ Run `build\NvDriverKit.exe` as administrator. The manifest asks for it.
 | `--probe` | Launches NVCleanstall and dumps the UIA control tree |
 | `--probe-attach` | Dumps an NVCleanstall window that is already open |
 | `--probe-back N` | Dumps the current page, then clicks Back and dumps again, N times |
+| `--dark` / `--light` | Pins the theme, the same as clicking the Theme button |
+| `--theme-auto` | Follows the Windows app theme, which is the default |
 
 Any page step that fails also dumps the live control tree before stopping, so a
 broken run leaves behind exactly what is needed to re-map it.
@@ -208,7 +211,14 @@ PostInstallScript=F:\Windows\Downloads\NvPostInstall.ps1
 [pins]
 nvcleanstall_sha256=...
 postinstall_sha256=...
+
+[ui]
+Theme=auto
 ```
+
+`Theme` is `auto`, `light` or `dark`. `auto` follows the Windows app theme and
+tracks it live, so switching Windows to dark switches the window with it. The
+Theme button cycles the three and writes the choice back here.
 
 ## Security Model
 
@@ -245,7 +255,8 @@ NvDriverKit/
 │   ├── uia.c             # UI Automation helpers
 │   ├── nv.c              # Driver version parsing, tweak manifest, device key
 │   ├── sec.c             # Authenticode, hashes, DACLs, staging
-│   └── log.c             # Append-only audit log
+│   ├── log.c             # Append-only audit log
+│   └── theme.c           # Light/dark palettes, owner-drawn buttons, dark caption
 ├── res/
 │   ├── app.ico           # Nine sizes, 16 to 256
 │   ├── app.manifest      # requireAdministrator, uiAccess=false
@@ -283,7 +294,7 @@ silent bump breaks every automation path. The exe is pinned by signer thumbprint
 | Checked | Result |
 |---|---|
 | Compiles, zero warnings at `-Wall -Wextra -Wshadow` | yes |
-| Standalone binary | about 136 KB, system DLLs only, no bundled runtime |
+| Standalone binary | about 144 KB, system DLLs only, no bundled runtime |
 | ASLR / high-entropy ASLR / DEP | on (`DllCharacteristics 0x0160`) |
 | Control Flow Guard | off (MinGW cannot emit it; use `build-msvc.bat`) |
 | Embedded manifest | exactly one, `requireAdministrator`, no `asInvoker` |
